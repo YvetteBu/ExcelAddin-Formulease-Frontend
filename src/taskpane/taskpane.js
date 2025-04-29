@@ -169,36 +169,18 @@ if (typeof window !== "undefined") {
                   // Allow aggregate formulas even if they are wrapped (e.g., AVERAGE(FILTER(...)))
                   const isSingleCellFormula = isAggregate;
 
-                  if (isSingleCellFormula) {
-                    const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                    tempRange.formulas = [["=" + formula]];
+                  // Always overwrite formula with result, do not leave any formulas in the sheet
+                  const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                  tempRange.formulas = [["=" + formula]];
+                  await context.sync();
+                  tempRange.load("values");
+                  await context.sync();
+                  const evaluated = tempRange.values[0][0];
+                  if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
+                    tempRange.values = [[evaluated]];
                     await context.sync();
-
-                    // 等待 Excel 自动计算
-                    tempRange.load("values");
-                    await context.sync();
-
-                    const evaluated = tempRange.values[0][0];
-                    if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
-                      tempRange.values = [[evaluated]];
-                      await context.sync();
-                    } else {
-                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
-                    }
                   } else {
-                    // Always overwrite formula with result, do not leave any formulas in the sheet
-                    const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                    fallbackRange.formulas = [["=" + formula]];
-                    await context.sync();
-                    fallbackRange.load("values");
-                    await context.sync();
-                    const computedValue = fallbackRange.values[0][0];
-                    if (computedValue !== undefined && !(typeof computedValue === "string" && computedValue.startsWith("#"))) {
-                      fallbackRange.values = [[computedValue]];
-                      await context.sync();
-                    } else {
-                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
-                    }
+                    recommendationElement.innerHTML += "<br>Formula evaluation failed.";
                   }
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
