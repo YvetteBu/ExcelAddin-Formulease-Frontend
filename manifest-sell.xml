@@ -6,11 +6,11 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="FormulEase" />
   <Description DefaultValue="An AI-powered Excel assistant to clean, explain and apply formulas easily." />
-  <IconUrl DefaultValue="https://excel-addin-formulease.vercel.app/assets/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://excel-addin-formulease.vercel.app/assets/icon-64.png" />
-  <SupportUrl DefaultValue="https://excel-addin-formulease.vercel.app/" />
+  <IconUrl DefaultValue="https://excel-addin-formulease-frontend.vercel.app/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://excel-addin-formulease-frontend.vercel.app/assets/icon-64.png" />
+  <SupportUrl DefaultValue="https://excel-addin-formulease-frontend.vercel.app/" />
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://excel-addin-formulease.vercel.app/taskpane.html" />
+    <SourceLocation DefaultValue="https://excel-addin-formulease-frontend.vercel.app/taskpane.html"/>
     <RequestedHeight>250</RequestedHeight>
   </DefaultSettings>
 
@@ -52,13 +52,13 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://excel-addin-formulease.vercel.app/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://excel-addin-formulease.vercel.app/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://excel-addin-formulease.vercel.app/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://excel-addin-formulease-frontend.vercel.app/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://excel-addin-formulease-frontend.vercel.app/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://excel-addin-formulease-frontend.vercel.app/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://excel-addin-formulease.vercel.app/taskpane.html"/>
+        <bt:Url id="TaskPane.Url" DefaultValue="https://excel-addin-formulease-frontend.vercel.app/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Welcome to FormulEase!" />
