@@ -169,18 +169,47 @@ if (typeof window !== "undefined") {
                   // Allow aggregate formulas even if they are wrapped (e.g., AVERAGE(FILTER(...)))
                   const isSingleCellFormula = isAggregate;
 
-                  // Always overwrite formula with result, do not leave any formulas in the sheet
-                  const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                  tempRange.formulas = [["=" + formula]];
-                  await context.sync();
-                  tempRange.load("values");
-                  await context.sync();
-                  const evaluated = tempRange.values[0][0];
-                  if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
-                    tempRange.values = [[evaluated]];
+                  if (isSingleCellFormula) {
+                    const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                    tempRange.formulas = [["=" + formula]];
                     await context.sync();
+
+                    // Force Excel to calculate the result
+                    tempRange.calculate();
+                    await context.sync();
+
+                    // Retrieve the computed result
+                    tempRange.load("values");
+                    await context.sync();
+
+                    const evaluated = tempRange.values[0][0];
+                    if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
+                      tempRange.values = [[evaluated]];  // Overwrite the cell with computed result
+                      await context.sync();
+                    } else {
+                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
+                    }
                   } else {
-                    recommendationElement.innerHTML += "<br>Formula evaluation failed.";
+                    // Always overwrite formula with result, do not leave any formulas in the sheet
+                    const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                    fallbackRange.formulas = [["=" + formula]];
+                    await context.sync();
+
+                    // Force Excel to calculate the result
+                    fallbackRange.calculate();
+                    await context.sync();
+
+                    // Retrieve the computed result
+                    fallbackRange.load("values");
+                    await context.sync();
+
+                    const computedValue = fallbackRange.values[0][0];
+                    if (computedValue !== undefined && !(typeof computedValue === "string" && computedValue.startsWith("#"))) {
+                      fallbackRange.values = [[computedValue]];  // Overwrite the cell with computed result
+                      await context.sync();
+                    } else {
+                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
+                    }
                   }
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
