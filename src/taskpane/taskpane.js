@@ -175,6 +175,7 @@ if (typeof window !== "undefined") {
                   );
 
                   if (isSingleCellFormula) {
+                    // For aggregate functions, insert the formula, capture the computed result, and overwrite with the value
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
                     await context.sync();
@@ -183,6 +184,8 @@ if (typeof window !== "undefined") {
                     const calculatedValue = resultRange.values[0][0];
                     resultRange.values = [[calculatedValue]];
                     console.log("Inserted calculated value for single-cell aggregate formula.");
+                  } else {
+                    console.log("Formula was recognized as aggregate; skipping bulk insert.");
                   }
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
