@@ -173,25 +173,9 @@ Instructions:
                 const startCol = selectedRange.columnIndex;
                 const targetCell = sheet.getCell(startRow, startCol);
 
-                console.log("Detected range formula:", isRangeFormula);
-
-                if (isRangeFormula) {
-                  // Insert the range formula and preserve it to allow full spill
-                  targetCell.formulas = [["=" + formula]];
-                  await context.sync();
-                  console.log("Inserted range formula (preserved):", formula);
-                } else {
-                  // Insert single-cell formula, extract computed value, and overwrite
-                  targetCell.formulas = [["=" + formula]];
-                  await context.sync();
-                  targetCell.load("values");
-                  await context.sync();
-                  const computedValue = targetCell.values[0][0];
-                  targetCell.formulas = [[""]];
-                  targetCell.values = [[computedValue]];
-                  await context.sync();
-                  console.log("Inserted single-cell computed result:", computedValue);
-                }
+                console.log("Formula written and left to spill as needed:", formula);
+                targetCell.formulas = [["=" + formula]];
+                await context.sync();
               });
             };
 
