@@ -175,13 +175,14 @@ if (typeof window !== "undefined") {
                   );
 
                   if (isSingleCellFormula) {
-                    // For aggregate functions, insert the formula, capture the computed result, and overwrite with the value
+                    // For aggregate functions, insert the formula, wait for calculation, then overwrite with value
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
                     await context.sync();
-                    const valueAfterCalc = resultRange.values;
+                    resultRange.load("values");
                     await context.sync();
-                    resultRange.values = valueAfterCalc;
+                    const calculatedValue = resultRange.values[0][0];
+                    resultRange.values = [[calculatedValue]];
                     console.log("Inserted calculated value for single-cell aggregate formula.");
                     return; // prevent fallback bulk insertion
                   } else {
