@@ -146,21 +146,23 @@ if (typeof window !== "undefined") {
                   await context.sync();
 
                   const selectedRange = context.workbook.getSelectedRange();
-                  selectedRange.load("rowIndex", "columnIndex");
+                  selectedRange.load(["rowIndex", "columnIndex"]);
                   await context.sync();
 
                   const startRow = selectedRange.rowIndex;
-                  const col = selectedRange.columnIndex;
-                  const rowCount = usedRange.rowCount - startRow;
+                  const startCol = selectedRange.columnIndex;
+                  const totalRows = usedRange.rowCount - startRow;
 
-                  const range = sheet.getRangeByIndexes(startRow, col, rowCount, 1);
-                  range.formulas = new Array(rowCount).fill([formula]);
+                  const fillRange = sheet.getRangeByIndexes(startRow, startCol, totalRows, 1);
+
+                  // Fill the entire column with the formula array
+                  const formulaArray = Array.from({ length: totalRows }, () => [formula]);
+                  fillRange.formulas = formulaArray;
+
                   await context.sync();
-
-                  console.log("Formula successfully applied to entire column from selected cell.");
+                  console.log("Formula successfully applied from selected cell down to the end of data.");
                 } catch (error) {
-                  console.log("Error applying formula to column.");
-                  console.log("Error occurred: " + error);
+                  console.error("Failed to apply formula:", error);
                 }
               });
             };
