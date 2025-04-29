@@ -187,14 +187,18 @@ if (typeof window !== "undefined") {
                       !(typeof finalValue === "string" && finalValue.startsWith("#"))
                     ) {
                       resultRange.values = [[finalValue]];
-                      await context.sync(); // commit the overwrite
+                      await context.sync();
                       console.log("Successfully inserted evaluated result.");
                     } else {
-                      console.warn("Formula did not return a valid result. No value inserted.");
+                      console.warn("Formula did not return a valid result. Inserting formula instead.");
+                      resultRange.formulas = [[formula]];
+                      await context.sync(); // fallback: at least insert formula string
                     }
-                    return; // prevent fallback bulk insertion
                   } else {
-                    console.log("Formula was recognized as aggregate; skipping bulk insert.");
+                    // fallback to inserting raw formula into the selected range
+                    const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                    fallbackRange.formulas = [[formula]];
+                    await context.sync();
                   }
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
