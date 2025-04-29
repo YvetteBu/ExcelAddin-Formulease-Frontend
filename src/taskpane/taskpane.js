@@ -173,9 +173,32 @@ Instructions:
                 const startCol = selectedRange.columnIndex;
                 const targetCell = sheet.getCell(startRow, startCol);
 
-                console.log("Formula written and left to spill as needed:", formula);
-                targetCell.formulas = [["=" + formula]];
-                await context.sync();
+                console.log("Detected range formula:", isRangeFormula);
+
+                if (isRangeFormula) {
+                  // Clear existing content in case data needs to spill
+                  const fullRange = sheet.getRangeByIndexes(startRow, startCol, 1, totalCols);
+                  fullRange.clear();
+
+                  // Write the formula directly to let it spill naturally
+                  targetCell.formulas = [["=" + formula]];
+                  await context.sync();
+                  console.log("Inserted full spill formula:", formula);
+                } else {
+                  // Insert single-cell formula, extract computed value, and overwrite
+                  // targetCell.formulas = [["=" + formula]];
+                  // await context.sync();
+                  // targetCell.load("values");
+                  // await context.sync();
+                  // const computedValue = targetCell.values[0][0];
+                  // targetCell.formulas = [[""]];
+                  // targetCell.values = [[computedValue]];
+                  // await context.sync();
+                  // console.log("Inserted single-cell computed result:", computedValue);
+                  targetCell.formulas = [["=" + formula]];
+                  await context.sync();
+                  console.log("Inserted single-cell formula:", formula);
+                }
               });
             };
 
