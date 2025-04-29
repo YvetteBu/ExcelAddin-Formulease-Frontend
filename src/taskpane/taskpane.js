@@ -176,12 +176,13 @@ Instructions:
                 console.log("Detected range formula:", isRangeFormula);
 
                 if (isRangeFormula) {
-                  // Let formula spill naturally from the target cell
+                  // Clear surrounding range to allow spill
+                  const spillRange = sheet.getRangeByIndexes(startRow, startCol, 1000, totalCols); // Clear sufficient rows/cols
+                  spillRange.clear();
                   targetCell.formulas = [["=" + formula]];
                   await context.sync();
                   console.log("Inserted full spill formula:", formula);
                 } else {
-                  // Fallback: insert formula as value
                   targetCell.formulas = [["=" + formula]];
                   await context.sync();
                   console.log("Inserted single-cell formula:", formula);
