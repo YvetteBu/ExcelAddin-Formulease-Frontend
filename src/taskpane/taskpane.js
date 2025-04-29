@@ -182,9 +182,13 @@ if (typeof window !== "undefined") {
                     resultRange.load("values");
                     await context.sync(); // wait for Excel to compute it
                     const finalValue = resultRange.values[0][0];
-                    resultRange.values = [[finalValue]];
-                    await context.sync(); // commit the overwrite
-                    console.log("Inserted calculated value for single-cell aggregate formula.");
+                    if (finalValue !== undefined && typeof finalValue !== "string") {
+                      resultRange.values = [[finalValue]];
+                      await context.sync(); // commit the overwrite
+                      console.log("Successfully inserted evaluated result.");
+                    } else {
+                      console.warn("Formula did not return a valid result. No value inserted.");
+                    }
                     return; // prevent fallback bulk insertion
                   } else {
                     console.log("Formula was recognized as aggregate; skipping bulk insert.");
