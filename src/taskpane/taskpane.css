@@ -1,0 +1,272 @@
+/*
+* Copyright (c) Microssoft Corporation. All rights reserved.
+* Licensed under the MIT License.
+* See LICENSE in the project root for license information.
+*/
+
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+ul{
+    margin : 0;
+    padding : 0;
+}
+
+.ms-welcome {
+    padding: 20px;
+    padding-bottom: 20px;
+}
+
+.ms-welcome__header {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ms-welcome__main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.ms-welcom__main > h2 {
+    width: 100%;
+    text-align: center;
+}
+
+.ms-welcom__features{
+    list-style-type:none;
+    margin-top: 20px;
+}
+
+.ms-welcom__features.ms-list .ms-ListItem {
+    padding-bottom: 20px;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.ms-welcome__features.ms-List .ms-ListItem
+> .ms-Icon {
+    margin-right: 10px;
+}
+.ms-welcome__action.ms-Button--hero {
+    margin-top: 30px;
+}
+
+.ms-Button {
+    margin-top: 20px;
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ms-Button:hover {
+    background-color: #106ebe;
+}
+
+.hidden {
+    display: none;
+}
+
+b {
+    font-weight: bold;
+}
+
+.auto-layout-text {
+    display:flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.text-block, .inline-flex {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+
+@keyframes spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+
+.recommendation-output {
+    font-family: monospace;
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+  .error-message {
+    color: #c62828;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+
+  button {
+    background-color: #e6f4ea; /* light green */
+    color: #1e633f; /* dark green text */
+    border: 1px solid #b3dbc5;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  button:hover {
+    background-color: #c7ebd4;
+    color: #124d31;
+    border-color: #91caae;
+  }
+/* User icon and account dropdown styles */
+.user-icon-container {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+}
+
+.user-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.account-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 12px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  padding: 10px;
+  font-size: 14px;
+  z-index: 1000;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.account-dropdown.open {
+  max-height: 300px; /* adjust based on expected content */
+  opacity: 1;
+}
+
+.account-dropdown p {
+  margin: 4px 0;
+}
+
+
+/* Login and Create Account small deep green buttons */
+#login-button, #create-account-button {
+  background-color: #1e633f; /* deep green */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#login-button:hover, #create-account-button:hover {
+  background-color: #124d31;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Form input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: #0078d7;
+    box-shadow: 0 0 0 2px rgba(0,120,215,0.2);
+}
+
+/* Button styles */
+button[type="submit"] {
+    background-color: #0078d7;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button[type="submit"]:hover {
+    background-color: #106ebe;
+}
+
+button[type="button"] {
+    background-color: #f5f5f5;
+    color: #333;
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button[type="button"]:hover {
+    background-color: #e5e5e5;
+}
+
+/* Error message styles */
+.error-message {
+    color: #d13438;
+    font-size: 12px;
+    margin-top: 4px;
+}

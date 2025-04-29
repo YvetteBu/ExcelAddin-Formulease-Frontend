@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulease Excel Assistant</title>
+
+  <!-- Office JS -->
+  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+  <!-- Fluent UI & CSS -->
+  <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
+  <link href="https://excel-addin-formulease-rjzjyrndk-yvettebus-projects.vercel.app/taskpane.css" rel="stylesheet" />
+
+  <!-- Your Script -->
+  <script src="https://excel-addin-formulease-rjzjyrndk-yvettebus-projects.vercel.app/taskpane.js" defer></script>
+</head>
+<body>
+  <div style="text-align: center; margin-bottom: 20px;">
+    <img src="../../assets/logo-formulease.png" alt="Formulease Logo" style="width: 150px;" />
+  </div>
+  <div id="sideload-msg" style="text-align: center;">
+    <h2>Please sideload your add-in to see app body.</h2>
+  </div>
+
+  <div style="display: flex; justify-content: center;">
+    <div id="app-body" class="hidden" style="max-width: 600px; text-align: center;">
+    <h1>Formulease: Excel Formula Generator</h1>
+
+    <div>
+      <textarea id="nl-input" rows="4" placeholder="Describe your intent..."></textarea>
+      <br />
+      <button id="nl-generate">Generate Formula</button>
+    </div>
+
+    <div id="recommendation" style="margin-top: 20px;"></div>
+
+
+    <div id="account-section">
+      <div id="account-dropdown" style="margin-top: 10px;"></div>
+
+      <button id="login-button">Log In</button>
+      <button id="create-account-button">Create Account</button>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" style="display:none;">
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="Email" required />
+        <input type="password" id="login-password" placeholder="Password" required />
+        <button type="submit">Log In</button>
+        <div id="login-error" style="color:red;display:none;"></div>
+      </form>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signup-modal" style="display:none;">
+      <form id="signup-form">
+        <input type="text" id="signup-name" placeholder="Name" required />
+        <input type="email" id="signup-email" placeholder="Email" required />
+        <input type="password" id="signup-password" placeholder="Password" required />
+        <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required />
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+
+    
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "my-office-addin",
+  "version": "1.0.0",
+  "description": "Office Add-in",
+  "scripts": {
+    "start": "webpack serve --https --port 3000 --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "dotenv": "^16.5.0",
+    "dotenv-webpack": "^8.1.0",
+    "es6-promise": "^4.2.8",
+    "firebase": "^11.6.1",
+    "firebase-admin": "^13.3.0",
+    "firebase-functions": "^6.3.2",
+    "office-addin-manifest": "^1.12.1",
+    "whatwg-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@types/office-js": "^1.0.0",
+    "babel-loader": "^10.0.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^7.1.2",
+    "dotenv-webpack": "^8.0.1",
+    "html-loader": "^5.1.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "office-addin-dev-certs": "^2.0.3",
+    "regenerator-runtime": "^0.14.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
+}
