@@ -65,6 +65,7 @@ if (typeof window !== "undefined") {
             await context.sync();
             activeColIndex = activeCell.columnIndex;
             targetHeader = headers[activeColIndex];
+            const excelColIndex = activeColIndex + 1;
           });
         } catch (err) {
           console.log("Excel run failed: ", err);
@@ -84,8 +85,8 @@ You are an expert Excel formula assistant.
 User's request: "${userIntent}" (use this as the main instruction)
 
 - Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
-- The active column is: ${targetHeader} (column index ${activeColIndex + 1})
-- Use the active column as the default target for calculations unless the user specifies otherwise.
+- The active column is: ${targetHeader} (column index ${excelColIndex})
+- Use the active column (index ${excelColIndex}) as the default target for calculations unless the user specifies otherwise.
 
 Instructions:
 - Row 1 contains headers.
