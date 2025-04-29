@@ -178,11 +178,12 @@ if (typeof window !== "undefined") {
                     // For aggregate functions, insert the formula, wait for calculation, then overwrite with value
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
-                    await context.sync();
+                    await context.sync(); // insert the formula
                     resultRange.load("values");
-                    await context.sync();
-                    const calculatedValue = resultRange.values[0][0];
-                    resultRange.values = [[calculatedValue]];
+                    await context.sync(); // wait for Excel to compute it
+                    const finalValue = resultRange.values[0][0];
+                    resultRange.values = [[finalValue]];
+                    await context.sync(); // commit the overwrite
                     console.log("Inserted calculated value for single-cell aggregate formula.");
                     return; // prevent fallback bulk insertion
                   } else {
