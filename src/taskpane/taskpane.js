@@ -45,8 +45,7 @@ if (typeof window !== "undefined") {
           return;
         }
 
-        let usedRange, totalRows, totalCols, previewValues;
-
+        let usedRange, totalRows, totalCols, previewValues, headers, activeColIndex, targetHeader;
         try {
           await Excel.run(async (context) => {
             const sheet = context.workbook.worksheets.getActiveWorksheet();
@@ -56,6 +55,16 @@ if (typeof window !== "undefined") {
             totalRows = usedRange.rowCount;
             totalCols = usedRange.columnCount;
             previewValues = usedRange.values.slice(1, 11); // preview first 10 rows
+            const headersLocal = usedRange.values[0];
+            headers = headersLocal;
+
+            // Determine the active cell's column index and address for context
+            const activeCell = context.workbook.getActiveCell();
+            activeCell.load("columnIndex");
+            activeCell.load("address");
+            await context.sync();
+            activeColIndex = activeCell.columnIndex;
+            targetHeader = headers[activeColIndex];
           });
         } catch (err) {
           console.log("Excel run failed: ", err);
@@ -64,20 +73,9 @@ if (typeof window !== "undefined") {
           totalRows = 0;
           totalCols = 0;
           usedRange = { address: "N/A" };
-        }
-
-        // Determine the active cell's column index for context
-        let activeCellColumnIndex = 0;
-        try {
-          await Excel.run(async (context) => {
-            const sheet = context.workbook.worksheets.getActiveWorksheet();
-            const activeCell = context.workbook.getActiveCell();
-            activeCell.load("columnIndex");
-            await context.sync();
-            activeCellColumnIndex = activeCell.columnIndex;
-          });
-        } catch (err) {
-          console.log("Failed to detect active cell column. Defaulting to column 0.", err);
+          headers = [];
+          activeColIndex = 0;
+          targetHeader = "";
         }
 
         const userPrompt = `
@@ -86,7 +84,8 @@ You are an expert Excel formula assistant.
 User's request: "${userIntent}" (use this as the main instruction)
 
 - Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
-- The user’s selected context is column index ${activeCellColumnIndex} (0-based). Prioritize using this column for computation unless clearly instructed otherwise.
+- The active column is: ${targetHeader} (column index ${activeColIndex})
+- Use the active column as the default target for calculations unless the user specifies otherwise.
 
 Instructions:
 - Row 1 contains headers.
@@ -96,10 +95,9 @@ Instructions:
   Formula: =...
   TargetCell: ...
   Explanation: ...
-- Be careful to avoid formulas that throw errors in Excel.
 - DO NOT use the SORT function. Use SORTBY instead.
 - DO NOT reference headers in formulas.
-- Ensure the formula is compatible with common Excel versions.
+- Ensure compatibility with common Excel versions.
 `;
 
         let response;
@@ -175,6 +173,10 @@ Instructions:
 
                 targetRange.formulas = [["=" + formula]];
                 await context.sync();
+
+                if (formula.trim().startsWith("SORTBY(") || formula.trim().startsWith("FILTER(")) {
+                  return; // skip overwriting for range-returning formulas
+                }
 
                 if (!isRangeFormula) {
                   targetRange.load("values");
