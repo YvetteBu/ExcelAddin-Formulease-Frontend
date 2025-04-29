@@ -174,17 +174,15 @@ Instructions:
                 targetRange.formulas = [["=" + formula]];
                 await context.sync();
 
-                if (formula.trim().startsWith("SORTBY(") || formula.trim().startsWith("FILTER(")) {
-                  return; // skip overwriting for range-returning formulas
+                if (isRangeFormula) {
+                  return; // skip overwriting formulas for multi-cell outputs like SORTBY or FILTER
                 }
 
-                if (!isRangeFormula) {
-                  targetRange.load("values");
-                  await context.sync();
-                  const computedValue = targetRange.values[0][0];
-                  targetRange.formulas = [[""]];
-                  targetRange.values = [[computedValue]];
-                }
+                targetRange.load("values");
+                await context.sync();
+                const computedValue = targetRange.values[0][0];
+                targetRange.formulas = [[""]];
+                targetRange.values = [[computedValue]];
                 await context.sync();
               });
             };
