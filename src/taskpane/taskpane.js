@@ -90,23 +90,18 @@ if (typeof window !== "undefined") {
         let response;
         try {
           console.log("Requesting backend from:", API_URL);
-
-          // Send user prompt to backend API using POST request
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
+            mode: "cors",  // explicitly allow CORS
             body: JSON.stringify({ prompt: userPrompt })
-          })
-          .catch(error => {
-            console.error("Network or CORS error:", error);
-            recommendationElement.innerHTML = `CORS or network issue: ${error.message}`;
           });
 
-          if (!response) {
-            console.log("No response received from fetch.");
-            recommendationElement.innerHTML = "No response from server.";
+          console.log("Response status:", response.status);
+          if (!response.ok) {
+            recommendationElement.innerHTML = `Server error: ${response.status}`;
             return;
           }
 
@@ -143,26 +138,28 @@ if (typeof window !== "undefined") {
 
 
             applyToSelectionBtn.onclick = async () => {
-              await Excel.run(async (ctx) => {
+              await Excel.run(async (context) => {
                 try {
-                  const sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                  const selectedRange = ctx.workbook.getSelectedRange();
-                  selectedRange.load("address, values");
-                  await ctx.sync();
+                  const sheet = context.workbook.worksheets.getActiveWorksheet();
+                  const usedRange = sheet.getUsedRange();
+                  usedRange.load("rowCount, columnCount");
+                  await context.sync();
 
-                  const currentValue = selectedRange.values[0][0];
-                  if (currentValue !== "") {
-                    // alert("The selected cell is not empty. Formula insertion canceled.");
-                    console.log("The selected cell is not empty. Formula insertion canceled.");
-                    return;
-                  }
+                  const selectedRange = context.workbook.getSelectedRange();
+                  selectedRange.load("rowIndex", "columnIndex");
+                  await context.sync();
 
-                  selectedRange.formulas = [[formula]];
-                  await ctx.sync();
-                  // alert("Formula successfully applied to selected cell.");
-                  console.log("Formula successfully applied to selected cell.");
+                  const startRow = selectedRange.rowIndex;
+                  const col = selectedRange.columnIndex;
+                  const rowCount = usedRange.rowCount - startRow;
+
+                  const range = sheet.getRangeByIndexes(startRow, col, rowCount, 1);
+                  range.formulas = new Array(rowCount).fill([formula]);
+                  await context.sync();
+
+                  console.log("Formula successfully applied to entire column from selected cell.");
                 } catch (error) {
-                  console.log("Error applying formula to selected cell.");
+                  console.log("Error applying formula to column.");
                   console.log("Error occurred: " + error);
                 }
               });
