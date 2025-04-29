@@ -178,6 +178,8 @@ if (typeof window !== "undefined") {
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
                     await context.sync();
+                    resultRange.load("values");
+                    await context.sync();
                     const calculatedValue = resultRange.values[0][0];
                     resultRange.values = [[calculatedValue]];
                     console.log("Inserted calculated value for single-cell aggregate formula.");
