@@ -36,6 +36,7 @@ if (typeof window !== "undefined") {
       document.getElementById("signup-form").onsubmit = handleSignupFormSubmit;
 
       document.getElementById("nl-generate").onclick = async () => {
+        // Get the user's intent from the input field and trim whitespace
         const userIntent = document.getElementById("nl-input").value.trim();
         const recommendationElement = document.getElementById("recommendation");
         recommendationElement.innerHTML = "Analyzing preview of sheet and generating formula...";
@@ -88,13 +89,19 @@ if (typeof window !== "undefined") {
 
         let response;
         try {
+          console.log("Requesting backend from:", API_URL);
 
+          // Send user prompt to backend API using POST request
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ prompt: userPrompt })
+          })
+          .catch(error => {
+            console.error("Network or CORS error:", error);
+            recommendationElement.innerHTML = `CORS or network issue: ${error.message}`;
           });
 
           if (!response) {
