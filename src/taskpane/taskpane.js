@@ -112,9 +112,17 @@ if (typeof window !== "undefined") {
           // --- Begin UI logic for apply buttons and explanation from plain res ---
           const reply = res.trim();
 
-          const formulaMatch = reply.match(/Formula:\s*(=.+)/);
+          const formulaMatch = reply.match(/Formula:\s*=(.+?)(?:\r?\n|$)/s);
           const targetCellMatch = reply.match(/TargetCell:\s*([A-Z]+\d+)/);
-          const explanationMatch = reply.match(/Explanation:\s*([\s\S]*)/);
+          const explanationMatch = reply.match(/Explanation:\s*([\s\S]*?)(?:\r?\n[A-Z][a-z]+:|$)/);
+
+          // Patch logical AND syntax fix for FILTER usage
+          if (formulaMatch && formulaMatch[1] && formulaMatch[1].includes("FILTER(")) {
+            let rawFormula = formulaMatch[1];
+            rawFormula = rawFormula.replace(/FILTER\(([^,]+),\s*\(([^)]+)\)\s*\*\s*\(([^)]+)\)\)/, 
+              (match, range, cond1, cond2) => `FILTER(${range}, (${cond1})*(${cond2}))`);
+            formulaMatch[1] = rawFormula;
+          }
 
           const formula = formulaMatch ? formulaMatch[1] : null;
           const targetCell = targetCellMatch ? targetCellMatch[1] : "A1";
