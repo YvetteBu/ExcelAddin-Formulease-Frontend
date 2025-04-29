@@ -66,26 +66,41 @@ if (typeof window !== "undefined") {
           usedRange = { address: "N/A" };
         }
 
+        // Determine the active cell's column index for context
+        let activeCellColumnIndex = 0;
+        try {
+          await Excel.run(async (context) => {
+            const sheet = context.workbook.worksheets.getActiveWorksheet();
+            const activeCell = context.workbook.getActiveCell();
+            activeCell.load("columnIndex");
+            await context.sync();
+            activeCellColumnIndex = activeCell.columnIndex;
+          });
+        } catch (err) {
+          console.log("Failed to detect active cell column. Defaulting to column 0.", err);
+        }
+
         const userPrompt = `
-        You are an expert Excel formula assistant.
+You are an expert Excel formula assistant.
 
-        User's request: "${userIntent}" (use this as the main instruction)
+User's request: "${userIntent}" (use this as the main instruction)
 
-        - Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}):${JSON.stringify(previewValues)}
+- Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
+- The user’s selected context is column index ${activeCellColumnIndex} (0-based). Prioritize using this column for computation unless clearly instructed otherwise.
 
-        Instructions:
-        - Row 1 contains headers.
-        - Output must be a single Excel formula.
-        - Also suggest the TargetCell.
-        - Format your answer like this (no extra text):
-          Formula: =...
-          TargetCell: ...
-          Explanation: ...
-        - Be careful to avoid formulas that throw errors in Excel.
-        - DO NOT use the SORT function. Use SORTBY instead.
-        - DO NOT reference headers in formulas.
-        - Ensure the formula is compatible with common Excel versions.
-        `;
+Instructions:
+- Row 1 contains headers.
+- Output must be a single Excel formula.
+- Also suggest the TargetCell.
+- Format your answer like this (no extra text):
+  Formula: =...
+  TargetCell: ...
+  Explanation: ...
+- Be careful to avoid formulas that throw errors in Excel.
+- DO NOT use the SORT function. Use SORTBY instead.
+- DO NOT reference headers in formulas.
+- Ensure the formula is compatible with common Excel versions.
+`;
 
         let response;
         try {
@@ -126,6 +141,7 @@ if (typeof window !== "undefined") {
           }
 
           const formula = formulaMatch ? formulaMatch[1] : null;
+          const isRangeFormula = formula && /^(SORTBY|FILTER)\(/i.test(formula.trim());
           const targetCell = targetCellMatch ? targetCellMatch[1] : "A1";
           const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation.";
 
@@ -157,17 +173,16 @@ if (typeof window !== "undefined") {
                 const startCol = selectedRange.columnIndex;
                 const targetRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
 
-                // Step 1: Insert the formula into the cell temporarily
                 targetRange.formulas = [["=" + formula]];
                 await context.sync();
 
-                // Step 2: Load the computed value after formula calculation
-                targetRange.load("values");
-                await context.sync();
-                const computedValue = targetRange.values[0][0];
-
-                // Step 3: Overwrite the cell with the computed result, removing the formula
-                targetRange.values = [[computedValue]];
+                if (!isRangeFormula) {
+                  targetRange.load("values");
+                  await context.sync();
+                  const computedValue = targetRange.values[0][0];
+                  targetRange.formulas = [[""]];
+                  targetRange.values = [[computedValue]];
+                }
                 await context.sync();
               });
             };
