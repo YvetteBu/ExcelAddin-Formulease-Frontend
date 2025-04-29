@@ -175,42 +175,19 @@ if (typeof window !== "undefined") {
                     resultRange.formulas = [[formula]];
                     await context.sync();
 
-                    let retries = 3;
-                    let finalValue = null;
-
-                    while (retries-- > 0) {
-                      resultRange.load("values");
-                      await context.sync();
-                      finalValue = resultRange.values[0][0];
-                      console.log("Evaluated value returned:", finalValue);
-                      if (finalValue !== undefined && !(typeof finalValue === "string" && finalValue.startsWith("#"))) {
-                        break;
-                      }
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-
-                    // After retry loop, ensure formula is visually inserted before being evaluated
-                    resultRange.formulas = [["=" + formula]];
+                    // Load the calculated value and overwrite if successful, else fallback to formula
+                    resultRange.load("values");
                     await context.sync();
-
-                    if (
-                      finalValue !== undefined &&
-                      !(typeof finalValue === "string" && finalValue.startsWith("#"))
-                    ) {
+                    const finalValue = resultRange.values[0][0];
+                    if (finalValue !== undefined && !(typeof finalValue === "string" && finalValue.startsWith("#"))) {
                       resultRange.values = [[finalValue]];
                       await context.sync();
-                      console.log("Successfully inserted evaluated result.");
+                      console.log("Final value inserted into cell:", finalValue);
                     } else {
-                      console.warn("Excel returned an error result or undefined:", finalValue);
-                      console.warn("Formula did not return a valid result. Inserting formula instead.");
                       resultRange.formulas = [["=" + formula]];
-                      await context.sync(); // fallback: at least insert formula string
+                      await context.sync();
+                      console.warn("Formula fallback inserted due to unresolved value.");
                     }
-
-                    // After retry loop and fallback, always load and log the formula in cell
-                    resultRange.load("formulas");
-                    await context.sync();
-                    console.log("Formula retained in cell:", resultRange.formulas[0][0]);
                   } else {
                     // fallback to inserting raw formula into the selected range, but try to evaluate and replace with value if possible
                     const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
