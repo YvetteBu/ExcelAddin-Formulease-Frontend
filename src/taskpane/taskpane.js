@@ -153,14 +153,20 @@ if (typeof window !== "undefined") {
                   const startCol = selectedRange.columnIndex;
                   const totalRows = usedRange.rowCount - startRow;
 
-                  const fillRange = sheet.getRangeByIndexes(startRow, startCol, totalRows, 1);
+                  // Determine if the formula should be applied to a single cell
+                  const isSingleCellFormula = !formula.includes("ROW()") && !formula.includes("ROW(");
 
-                  // Fill the entire column with the formula array
-                  const formulaArray = Array.from({ length: totalRows }, () => [formula]);
-                  fillRange.formulas = formulaArray;
+                  if (isSingleCellFormula) {
+                    selectedRange.formulas = [[formula]];
+                    console.log("Applied single-cell formula to selected cell.");
+                  } else {
+                    const fillRange = sheet.getRangeByIndexes(startRow, startCol, totalRows, 1);
+                    const formulaArray = Array.from({ length: totalRows }, () => [formula]);
+                    fillRange.formulas = formulaArray;
+                    console.log("Formula applied from selected cell down to end of data.");
+                  }
 
                   await context.sync();
-                  console.log("Formula successfully applied from selected cell down to the end of data.");
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
                 }
