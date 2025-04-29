@@ -65,7 +65,7 @@ if (typeof window !== "undefined") {
             await context.sync();
             activeColIndex = activeCell.columnIndex;
             targetHeader = headers[activeColIndex];
-            const excelColIndex = activeColIndex + 1;
+            const excelColIndex = activeCell.columnIndex + 1;
           });
         } catch (err) {
           console.log("Excel run failed: ", err);
@@ -161,36 +161,36 @@ Instructions:
             applyToSelectionBtn.style.marginRight = "10px";
 
 
-            // Insert formula briefly, extract calculated result, and immediately overwrite to remove formula from cell.
+            // Formula application logic: supports range spill and single-value overwrite
             applyToSelectionBtn.onclick = async () => {
               await Excel.run(async (context) => {
                 const sheet = context.workbook.worksheets.getActiveWorksheet();
                 const selectedRange = context.workbook.getSelectedRange();
                 selectedRange.load(["rowIndex", "columnIndex"]);
                 await context.sync();
+
                 const startRow = selectedRange.rowIndex;
                 const startCol = selectedRange.columnIndex;
-                const targetRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                const targetCell = sheet.getCell(startRow, startCol);
 
-                // Debugging: log formula type check
                 console.log("Detected range formula:", isRangeFormula);
 
                 if (isRangeFormula) {
-                  // Only insert the formula and do NOT overwrite result
-                  targetRange.formulas = [["=" + formula]];
+                  // Insert the range formula and preserve it to allow full spill
+                  targetCell.formulas = [["=" + formula]];
                   await context.sync();
-                  console.log("Inserted range formula:", formula);
+                  console.log("Inserted range formula (preserved):", formula);
                 } else {
-                  // For single-cell formulas, insert, extract result, and clean up formula
-                  targetRange.formulas = [["=" + formula]];
+                  // Insert single-cell formula, extract computed value, and overwrite
+                  targetCell.formulas = [["=" + formula]];
                   await context.sync();
-                  targetRange.load("values");
+                  targetCell.load("values");
                   await context.sync();
-                  const computedValue = targetRange.values[0][0];
-                  targetRange.formulas = [[""]];
-                  targetRange.values = [[computedValue]];
+                  const computedValue = targetCell.values[0][0];
+                  targetCell.formulas = [[""]];
+                  targetCell.values = [[computedValue]];
                   await context.sync();
-                  console.log("Inserted single-cell value:", computedValue);
+                  console.log("Inserted single-cell computed result:", computedValue);
                 }
               });
             };
