@@ -179,11 +179,11 @@ if (typeof window !== "undefined") {
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
                     await context.sync();
-                    resultRange.load("values");
+                    const valueAfterCalc = resultRange.values;
                     await context.sync();
-                    const calculatedValue = resultRange.values[0][0];
-                    resultRange.values = [[calculatedValue]];
+                    resultRange.values = valueAfterCalc;
                     console.log("Inserted calculated value for single-cell aggregate formula.");
+                    return; // prevent fallback bulk insertion
                   } else {
                     console.log("Formula was recognized as aggregate; skipping bulk insert.");
                   }
