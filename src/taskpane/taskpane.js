@@ -170,26 +170,23 @@ if (typeof window !== "undefined") {
                   const isSingleCellFormula = isAggregate;
 
                   if (isSingleCellFormula) {
-                    // For aggregate functions, insert the formula, wait for calculation, then overwrite with value
-                    const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                    resultRange.formulas = [[formula]];
+                    const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                    tempRange.formulas = [["=" + formula]];
                     await context.sync();
 
-                    // Load the calculated value and overwrite if successful, else fallback to formula
-                    resultRange.load("values");
+                    // 等待 Excel 自动计算
+                    tempRange.load("values");
                     await context.sync();
-                    const finalValue = resultRange.values[0][0];
-                    if (finalValue !== undefined && !(typeof finalValue === "string" && finalValue.startsWith("#"))) {
-                      resultRange.values = [[finalValue]];
+
+                    const evaluated = tempRange.values[0][0];
+                    if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
+                      tempRange.values = [[evaluated]];
                       await context.sync();
-                      console.log("Final value inserted into cell:", finalValue);
                     } else {
-                      resultRange.formulas = [["=" + formula]];
-                      await context.sync();
-                      console.warn("Formula fallback inserted due to unresolved value.");
+                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
                     }
                   } else {
-                    // fallback to inserting raw formula into the selected range, but try to evaluate and replace with value if possible
+                    // Always overwrite formula with result, do not leave any formulas in the sheet
                     const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     fallbackRange.formulas = [["=" + formula]];
                     await context.sync();
@@ -199,6 +196,8 @@ if (typeof window !== "undefined") {
                     if (computedValue !== undefined && !(typeof computedValue === "string" && computedValue.startsWith("#"))) {
                       fallbackRange.values = [[computedValue]];
                       await context.sync();
+                    } else {
+                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
                     }
                   }
                 } catch (error) {
