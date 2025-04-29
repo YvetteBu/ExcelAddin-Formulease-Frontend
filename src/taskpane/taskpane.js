@@ -146,74 +146,29 @@ if (typeof window !== "undefined") {
             applyToSelectionBtn.style.marginRight = "10px";
 
 
+            // Insert formula briefly, extract calculated result, and immediately overwrite to remove formula from cell.
             applyToSelectionBtn.onclick = async () => {
               await Excel.run(async (context) => {
-                try {
-                  const sheet = context.workbook.worksheets.getActiveWorksheet();
-                  const usedRange = sheet.getUsedRange();
-                  usedRange.load("rowCount, columnCount");
-                  await context.sync();
+                const sheet = context.workbook.worksheets.getActiveWorksheet();
+                const selectedRange = context.workbook.getSelectedRange();
+                selectedRange.load(["rowIndex", "columnIndex"]);
+                await context.sync();
+                const startRow = selectedRange.rowIndex;
+                const startCol = selectedRange.columnIndex;
+                const targetRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
 
-                  const selectedRange = context.workbook.getSelectedRange();
-                  selectedRange.load(["rowIndex", "columnIndex"]);
-                  await context.sync();
+                // Step 1: Insert the formula into the cell temporarily
+                targetRange.formulas = [["=" + formula]];
+                await context.sync();
 
-                  const startRow = selectedRange.rowIndex;
-                  const startCol = selectedRange.columnIndex;
-                  const totalRows = usedRange.rowCount - startRow;
+                // Step 2: Load the computed value after formula calculation
+                targetRange.load("values");
+                await context.sync();
+                const computedValue = targetRange.values[0][0];
 
-                  // New logic: only allow aggregate functions to insert into a single cell and insert the computed result
-                  const aggregateFunctions = ["AVERAGE(", "SUM(", "MAX(", "MIN(", "COUNT("];
-                  const normalizedFormula = formula.replace(/\s+/g, "").toUpperCase();
-                  const isAggregate = aggregateFunctions.some(fn => normalizedFormula.includes(fn));
-                  // Allow aggregate formulas even if they are wrapped (e.g., AVERAGE(FILTER(...)))
-                  const isSingleCellFormula = isAggregate;
-
-                  if (isSingleCellFormula) {
-                    const tempRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                    tempRange.formulas = [["=" + formula]];
-                    await context.sync();
-
-                    // Force Excel to calculate the result
-                    tempRange.calculate();
-                    await context.sync();
-
-                    // Retrieve the computed result
-                    tempRange.load("values");
-                    await context.sync();
-
-                    const evaluated = tempRange.values[0][0];
-                    if (evaluated !== undefined && !(typeof evaluated === "string" && evaluated.startsWith("#"))) {
-                      tempRange.values = [[evaluated]];  // Overwrite the cell with computed result
-                      await context.sync();
-                    } else {
-                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
-                    }
-                  } else {
-                    // Always overwrite formula with result, do not leave any formulas in the sheet
-                    const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
-                    fallbackRange.formulas = [["=" + formula]];
-                    await context.sync();
-
-                    // Force Excel to calculate the result
-                    fallbackRange.calculate();
-                    await context.sync();
-
-                    // Retrieve the computed result
-                    fallbackRange.load("values");
-                    await context.sync();
-
-                    const computedValue = fallbackRange.values[0][0];
-                    if (computedValue !== undefined && !(typeof computedValue === "string" && computedValue.startsWith("#"))) {
-                      fallbackRange.values = [[computedValue]];  // Overwrite the cell with computed result
-                      await context.sync();
-                    } else {
-                      recommendationElement.innerHTML += "<br>Formula evaluation failed.";
-                    }
-                  }
-                } catch (error) {
-                  console.error("Failed to apply formula:", error);
-                }
+                // Step 3: Overwrite the cell with the computed result, removing the formula
+                targetRange.values = [[computedValue]];
+                await context.sync();
               });
             };
 
