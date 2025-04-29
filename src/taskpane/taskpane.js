@@ -178,12 +178,14 @@ Instructions:
                 if (isRangeFormula) {
                   // Clear surrounding range to allow spill
                   const spillRange = sheet.getRangeByIndexes(startRow, startCol, 1000, totalCols); // Clear sufficient rows/cols
-                  spillRange.clear();
-                  targetCell.formulas = [["=" + formula]];
+                  spillRange.clear(Excel.ClearApplyTo.all);
+                  targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+                  targetCell.format.autofitColumns();
                   await context.sync();
                   console.log("Inserted full spill formula:", formula);
                 } else {
-                  targetCell.formulas = [["=" + formula]];
+                  targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+                  targetCell.format.autofitColumns();
                   await context.sync();
                   console.log("Inserted single-cell formula:", formula);
                 }
