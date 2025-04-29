@@ -161,20 +161,27 @@ if (typeof window !== "undefined") {
                   const startCol = selectedRange.columnIndex;
                   const totalRows = usedRange.rowCount - startRow;
 
-                  // Determine if the formula should be applied to a single cell
-                  const isSingleCellFormula = !formula.includes("ROW()") && !formula.includes("ROW(");
+                  // New logic: only allow aggregate functions to insert into a single cell and insert the computed result
+                  const isSingleCellFormula = (
+                    !formula.includes("ROW()") &&
+                    !formula.includes("ROW(") &&
+                    (
+                      formula.startsWith("AVERAGE(") ||
+                      formula.startsWith("SUM(") ||
+                      formula.startsWith("MAX(") ||
+                      formula.startsWith("MIN(") ||
+                      formula.startsWith("COUNT(")
+                    )
+                  );
 
                   if (isSingleCellFormula) {
-                    selectedRange.formulas = [[formula]];
-                    console.log("Applied single-cell formula to selected cell.");
-                  } else {
-                    const fillRange = sheet.getRangeByIndexes(startRow, startCol, totalRows, 1);
-                    const formulaArray = Array.from({ length: totalRows }, () => [formula]);
-                    fillRange.formulas = formulaArray;
-                    console.log("Formula applied from selected cell down to end of data.");
+                    const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
+                    resultRange.formulas = [[formula]];
+                    await context.sync();
+                    const calculatedValue = resultRange.values[0][0];
+                    resultRange.values = [[calculatedValue]];
+                    console.log("Inserted calculated value for single-cell aggregate formula.");
                   }
-
-                  await context.sync();
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
                 }
