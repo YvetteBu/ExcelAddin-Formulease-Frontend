@@ -171,19 +171,26 @@ Instructions:
                 const startCol = selectedRange.columnIndex;
                 const targetRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
 
-                targetRange.formulas = [["=" + formula]];
-                await context.sync();
+                // Debugging: log formula type check
+                console.log("Detected range formula:", isRangeFormula);
 
                 if (isRangeFormula) {
-                  return; // skip overwriting formulas for multi-cell outputs like SORTBY or FILTER
+                  // Only insert the formula and do NOT overwrite result
+                  targetRange.formulas = [["=" + formula]];
+                  await context.sync();
+                  console.log("Inserted range formula:", formula);
+                } else {
+                  // For single-cell formulas, insert, extract result, and clean up formula
+                  targetRange.formulas = [["=" + formula]];
+                  await context.sync();
+                  targetRange.load("values");
+                  await context.sync();
+                  const computedValue = targetRange.values[0][0];
+                  targetRange.formulas = [[""]];
+                  targetRange.values = [[computedValue]];
+                  await context.sync();
+                  console.log("Inserted single-cell value:", computedValue);
                 }
-
-                targetRange.load("values");
-                await context.sync();
-                const computedValue = targetRange.values[0][0];
-                targetRange.formulas = [[""]];
-                targetRange.values = [[computedValue]];
-                await context.sync();
               });
             };
 
