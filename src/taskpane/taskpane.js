@@ -90,6 +90,7 @@ if (typeof window !== "undefined") {
         let response;
         try {
           console.log("Requesting backend from:", API_URL);
+          if (!API_URL.includes("localhost")) console.warn("Using production backend, ensure taskpane.js and taskpane.css are correctly deployed.");
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
@@ -170,10 +171,21 @@ if (typeof window !== "undefined") {
                     // For aggregate functions, insert the formula, wait for calculation, then overwrite with value
                     const resultRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     resultRange.formulas = [[formula]];
-                    await context.sync(); // insert the formula
-                    resultRange.load("values");
-                    await context.sync(); // wait for Excel to compute it
-                    const finalValue = resultRange.values[0][0];
+                    await context.sync();
+
+                    let retries = 3;
+                    let finalValue = null;
+
+                    while (retries-- > 0) {
+                      resultRange.load("values");
+                      await context.sync();
+                      finalValue = resultRange.values[0][0];
+                      if (finalValue !== undefined && !(typeof finalValue === "string" && finalValue.startsWith("#"))) {
+                        break;
+                      }
+                      await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+
                     if (
                       finalValue !== undefined &&
                       !(typeof finalValue === "string" && finalValue.startsWith("#"))
@@ -237,7 +249,11 @@ if (typeof window !== "undefined") {
       }
 
       if (info.host === Office.HostType.Excel) {
-        document.getElementById("insertData").addEventListener("click", insertSampleData);
+        const insertBtn = document.getElementById("insertData");
+        if (insertBtn) {
+          insertBtn.addEventListener("click", insertSampleData);
+        }
+        // Avoid runtime error if "insertData" button is missing from DOM
       }
     });
   }
