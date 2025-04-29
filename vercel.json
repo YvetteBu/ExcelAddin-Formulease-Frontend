@@ -1,18 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/taskpane.html" }
-  ],
   "routes": [
-    {
-      "src": "/api/gpt",
-      "methods": ["POST", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "https://excel-addin-formulease.vercel.app",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": "true"
-      },
-      "dest": "/api/gpt"
-    }
+    { "source": "/", "destination": "/taskpane.html" }
   ]
 }
