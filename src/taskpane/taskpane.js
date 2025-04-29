@@ -164,7 +164,9 @@ if (typeof window !== "undefined") {
 
                   // New logic: only allow aggregate functions to insert into a single cell and insert the computed result
                   const aggregateFunctions = ["AVERAGE(", "SUM(", "MAX(", "MIN(", "COUNT("];
-                  const isAggregate = aggregateFunctions.some(fn => formula.toUpperCase().startsWith(fn));
+                  const normalizedFormula = formula.replace(/\s+/g, "").toUpperCase();
+                  const isAggregate = aggregateFunctions.some(fn => normalizedFormula.includes(fn));
+                  // Allow aggregate formulas even if they are wrapped (e.g., AVERAGE(FILTER(...)))
                   const isSingleCellFormula = isAggregate;
 
                   if (isSingleCellFormula) {
@@ -180,10 +182,11 @@ if (typeof window !== "undefined") {
                       resultRange.load("values");
                       await context.sync();
                       finalValue = resultRange.values[0][0];
+                      console.log("Evaluated value returned:", finalValue);
                       if (finalValue !== undefined && !(typeof finalValue === "string" && finalValue.startsWith("#"))) {
                         break;
                       }
-                      await new Promise(resolve => setTimeout(resolve, 200));
+                      await new Promise(resolve => setTimeout(resolve, 500));
                     }
 
                     if (
@@ -194,6 +197,7 @@ if (typeof window !== "undefined") {
                       await context.sync();
                       console.log("Successfully inserted evaluated result.");
                     } else {
+                      console.warn("Excel returned an error result or undefined:", finalValue);
                       console.warn("Formula did not return a valid result. Inserting formula instead.");
                       resultRange.formulas = [[formula]];
                       await context.sync(); // fallback: at least insert formula string
