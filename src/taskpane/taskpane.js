@@ -162,17 +162,9 @@ if (typeof window !== "undefined") {
                   const totalRows = usedRange.rowCount - startRow;
 
                   // New logic: only allow aggregate functions to insert into a single cell and insert the computed result
-                  const isSingleCellFormula = (
-                    !formula.includes("ROW()") &&
-                    !formula.includes("ROW(") &&
-                    (
-                      formula.startsWith("AVERAGE(") ||
-                      formula.startsWith("SUM(") ||
-                      formula.startsWith("MAX(") ||
-                      formula.startsWith("MIN(") ||
-                      formula.startsWith("COUNT(")
-                    )
-                  );
+                  const aggregateFunctions = ["AVERAGE(", "SUM(", "MAX(", "MIN(", "COUNT("];
+                  const isAggregate = aggregateFunctions.some(fn => formula.toUpperCase().startsWith(fn));
+                  const isSingleCellFormula = isAggregate;
 
                   if (isSingleCellFormula) {
                     // For aggregate functions, insert the formula, wait for calculation, then overwrite with value
@@ -195,10 +187,17 @@ if (typeof window !== "undefined") {
                       await context.sync(); // fallback: at least insert formula string
                     }
                   } else {
-                    // fallback to inserting raw formula into the selected range
+                    // fallback to inserting raw formula into the selected range, but try to evaluate and replace with value if possible
                     const fallbackRange = sheet.getRangeByIndexes(startRow, startCol, 1, 1);
                     fallbackRange.formulas = [[formula]];
                     await context.sync();
+                    fallbackRange.load("values");
+                    await context.sync();
+                    const computedValue = fallbackRange.values[0][0];
+                    if (computedValue !== undefined && !(typeof computedValue === "string" && computedValue.startsWith("#"))) {
+                      fallbackRange.values = [[computedValue]];
+                      await context.sync();
+                    }
                   }
                 } catch (error) {
                   console.error("Failed to apply formula:", error);
