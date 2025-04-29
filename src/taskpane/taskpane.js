@@ -84,7 +84,7 @@ You are an expert Excel formula assistant.
 User's request: "${userIntent}" (use this as the main instruction)
 
 - Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
-- The active column is: ${targetHeader} (column index ${activeColIndex})
+- The active column is: ${targetHeader} (column index ${activeColIndex + 1})
 - Use the active column as the default target for calculations unless the user specifies otherwise.
 
 Instructions:
