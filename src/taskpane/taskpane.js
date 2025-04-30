@@ -171,7 +171,11 @@ Instructions:
 
                 const startRow = selectedRange.rowIndex;
                 const startCol = selectedRange.columnIndex;
-                const targetCell = sheet.getCell(startRow, startCol);
+                // Write formula to a safe spill zone outside used range to avoid #CALC! errors
+                const usedRange = sheet.getUsedRange();
+                usedRange.load("rowCount, columnCount");
+                await context.sync();
+                const targetCell = sheet.getCell(0, usedRange.columnCount + 2); // write formula to the first row after used columns
 
                 targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
                 await context.sync();
