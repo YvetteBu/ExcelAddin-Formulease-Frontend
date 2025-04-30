@@ -175,7 +175,10 @@ Instructions:
                 const usedRange = sheet.getUsedRange();
                 usedRange.load("rowCount, columnCount");
                 await context.sync();
-                const targetCell = sheet.getCell(0, usedRange.columnCount + 2); // write formula to the first row after used columns
+                const targetCell = sheet.getCell(0, usedRange.columnCount + 2);
+                const spillClearRange = sheet.getRangeByIndexes(0, usedRange.columnCount + 2, usedRange.rowCount + 10, usedRange.columnCount);
+                spillClearRange.clear(); // Ensure all spill cells are truly empty
+                await context.sync();
 
                 targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
                 await context.sync();
