@@ -180,7 +180,7 @@ if (typeof window !== "undefined") {
             applyToSelectionBtn.innerText = "Apply to Selected Cell";
             applyToSelectionBtn.style.marginRight = "10px";
 
-            // Formula application logic: minimal version, Excel handles spill/display natively
+            // Formula application logic: updated to write to the currently selected cell
             applyToSelectionBtn.onclick = async () => {
               await Excel.run(async (context) => {
                 const sheet = context.workbook.worksheets.getActiveWorksheet();
@@ -190,15 +190,8 @@ if (typeof window !== "undefined") {
 
                 const startRow = selectedRange.rowIndex;
                 const startCol = selectedRange.columnIndex;
-                // Write formula to a safe spill zone outside used range to avoid #CALC! errors
-                const usedRange = sheet.getUsedRange();
-                usedRange.load("rowCount, columnCount");
-                await context.sync();
-                const targetCellObj = sheet.getCell(0, usedRange.columnCount + 2);
-                const spillClearRange = sheet.getRangeByIndexes(0, usedRange.columnCount + 2, usedRange.rowCount + 10, usedRange.columnCount);
-                spillClearRange.clear(); // Ensure all spill cells are truly empty
-                await context.sync();
 
+                const targetCellObj = sheet.getCell(startRow, startCol);
                 targetCellObj.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
                 await context.sync();
               });
