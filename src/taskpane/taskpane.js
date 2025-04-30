@@ -101,8 +101,8 @@ if (typeof window !== "undefined") {
           targetHeader = "";
         }
 
-        // Diagnostic logs before building userPrompt
-        console.log("Preparing to build userPrompt with previewValues:", previewValues);
+        // Diagnostic logs before building payloadData
+        console.log("Preparing to build payloadData with previewValues:", previewValues);
         console.log("Headers array content:", headers);
         console.log("usedRange address:", usedRange.address);
 
@@ -111,46 +111,32 @@ if (typeof window !== "undefined") {
           return;
         }
 
-        const userPrompt = `
-You are an expert Excel formula assistant.
-
-User's request: "${userIntent}" (use this as the main instruction)
-
-- Preview (first 5 rows, key columns only, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
-- The active column is: ${targetHeader} (column index ${excelColIndex})
-- Use the active column (index ${excelColIndex}) as the default target for calculations unless the user specifies otherwise.
-
-Instructions:
-- Row 1 contains headers.
-- Output must be a single Excel formula.
-- Also suggest the TargetCell.
-- Format your answer like this (no extra text):
-  Formula: =...
-  TargetCell: ...
-  Explanation: ...
-- DO NOT use the SORT function. Use SORTBY instead.
-- DO NOT reference headers in formulas.
-- Ensure compatibility with common Excel versions.
-`;
-        console.log("Final userPrompt length:", userPrompt.length);
-        console.log("Final userPrompt content:", userPrompt);
-        console.log("Constructed userPrompt:", userPrompt);
+        // Build structured payloadData object
+        const payloadData = {
+          instruction: userIntent,
+          previewValues,
+          headers,
+          activeColIndex,
+          targetHeader,
+          usedRange: usedRange.address,
+          totalRows,
+          totalCols
+        };
+        console.log("Structured payloadData:", payloadData);
         recommendationElement.innerHTML = "Sending request to backend...";
-        console.log("Preparing payload to backend:", JSON.stringify({ prompt: userPrompt }).substring(0, 500));
-
         let response;
-        // Diagnostic: check prompt before fetch
-        if (!userPrompt || userPrompt.length < 10) {
-          console.error("Prompt is too short or undefined:", userPrompt);
+        // Diagnostic: check payloadData before fetch
+        if (!payloadData.instruction || payloadData.instruction.length < 1) {
+          console.error("Instruction is too short or undefined:", payloadData.instruction);
           recommendationElement.innerHTML = "Prompt construction failed.";
           return;
         }
         try {
           let payload;
           try {
-            payload = JSON.stringify({ prompt: userPrompt });
+            payload = JSON.stringify(payloadData);
           } catch (err) {
-            console.error("Prompt stringify failed:", err);
+            console.error("Payload stringify failed:", err);
             recommendationElement.innerHTML = "Prompt encoding failed.";
             return;
           }
@@ -194,7 +180,7 @@ Instructions:
           // Patch logical AND syntax fix for FILTER usage
           if (formulaMatch && formulaMatch[1] && formulaMatch[1].includes("FILTER(")) {
             let rawFormula = formulaMatch[1];
-            rawFormula = rawFormula.replace(/FILTER\(([^,]+),\s*\(([^)]+)\)\s*\*\s*\(([^)]+)\)\)/, 
+            rawFormula = rawFormula.replace(/FILTER\(([^,]+),\s*\(([^)]+)\)\s*\*\s*\(([^)]+)\)\)/,
               (match, range, cond1, cond2) => `FILTER(${range}, (${cond1})*(${cond2}))`);
             formulaMatch[1] = rawFormula;
           }
@@ -225,7 +211,6 @@ Instructions:
             applyToSelectionBtn.innerText = "Apply to Selected Cell";
             applyToSelectionBtn.style.marginRight = "10px";
 
-
             // Formula application logic: minimal version, Excel handles spill/display natively
             applyToSelectionBtn.onclick = async () => {
               await Excel.run(async (context) => {
@@ -250,10 +235,7 @@ Instructions:
               });
             };
 
-
             buttonContainer.appendChild(applyToSelectionBtn);
-
-
             recommendationElement.appendChild(buttonContainer);
           }
 
@@ -262,7 +244,7 @@ Instructions:
           explanationBlock.style.marginTop = "10px";
           recommendationElement.appendChild(explanationBlock);
           // --- End UI logic for apply buttons and explanation from plain res ---
-          
+
         } catch (fetchErr) {
           if (fetchErr.name === 'AbortError') {
             console.error("Fetch aborted due to timeout");
