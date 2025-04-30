@@ -40,12 +40,22 @@ if (typeof window !== "undefined") {
       document.getElementById("nl-generate").onclick = async () => {
         console.log("Triggered generate button");
         // Get the user's intent from the input field and trim whitespace
-        const userIntent = document.getElementById("nl-input").value.trim();
+        let userIntent = document.getElementById("nl-input").value.trim();
         const recommendationElement = document.getElementById("recommendation");
         recommendationElement.innerHTML = "Analyzing preview of sheet and generating formula...";
         if (!userIntent) {
           recommendationElement.innerHTML = "Please enter your intention.";
           return;
+        }
+        // Fuzzy match userIntent tokens to headers and auto-correct
+        if (typeof headers !== "undefined" && Array.isArray(headers) && headers.length > 0) {
+          const loweredHeaders = headers.map(h => h.toLowerCase());
+          userIntent.split(" ").forEach(word => {
+            const match = loweredHeaders.find(h => h.includes(word.toLowerCase()));
+            if (match) {
+              userIntent = userIntent.replace(new RegExp(word, "gi"), match);
+            }
+          });
         }
 
         let usedRange, totalRows, totalCols, previewValues, headers, activeColIndex, targetHeader;
@@ -177,7 +187,7 @@ if (typeof window !== "undefined") {
           // Insert error block if formula is invalid, and return early
           if (!formula || formula === "**") {
             const errorBlock = document.createElement("div");
-            errorBlock.innerText = "Failed to generate a valid formula. Please rephrase your request.";
+            errorBlock.innerText = "We couldn’t generate a valid formula. Try using phrases like ‘average of troponin when result is positive’ or ‘rank by heart rate descending’.";
             errorBlock.style.color = "red";
             recommendationElement.appendChild(errorBlock);
             return;
