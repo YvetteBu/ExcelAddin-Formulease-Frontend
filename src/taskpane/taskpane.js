@@ -188,7 +188,8 @@ if (typeof window !== "undefined") {
           recommendationElement.appendChild(formulaBlock);
 
           const cellBlock = document.createElement("div");
-          cellBlock.innerText = `Recommended cell: ${targetCell || "**"}`;
+          const safeTargetCell = typeof targetCell === "string" ? targetCell : "L1";
+          cellBlock.innerText = `Recommended cell: ${safeTargetCell}`;
           recommendationElement.appendChild(cellBlock);
 
           const buttonContainer = document.createElement("div");
@@ -199,6 +200,7 @@ if (typeof window !== "undefined") {
           applyToSelectionBtn.style.marginRight = "10px";
 
           applyToSelectionBtn.onclick = async () => {
+            const safeTargetCell = typeof targetCell === "string" ? targetCell : "L1";
             // Protect: do not insert if formula is invalid
             if (!formula || formula === "**") {
               console.error("Invalid formula. Skipping insert.");
