@@ -54,12 +54,15 @@ if (typeof window !== "undefined") {
             usedRange = sheet.getUsedRange();
             usedRange.load("values, address, rowCount, columnCount");
             await context.sync();
+            console.log("UsedRange address:", usedRange.address);
             console.log("After sync - got usedRange");
             totalRows = usedRange.rowCount;
             totalCols = usedRange.columnCount;
             previewValues = usedRange.values.slice(1, 11); // preview first 10 rows
+            console.log("PreviewValues:", previewValues);
             const headersLocal = usedRange.values[0];
             headers = headersLocal;
+            console.log("Headers:", headers);
 
             // Determine the active cell's column index and address for context
             const activeCell = context.workbook.getActiveCell();
@@ -68,6 +71,7 @@ if (typeof window !== "undefined") {
             await context.sync();
             activeColIndex = activeCell.columnIndex;
             targetHeader = headers[activeColIndex];
+            console.log("TargetHeader:", targetHeader);
             const excelColIndex = activeCell.columnIndex + 1;
           });
         } catch (err) {
