@@ -161,7 +161,7 @@ Instructions:
             applyToSelectionBtn.style.marginRight = "10px";
 
 
-            // Formula application logic: supports range spill and single-value overwrite
+            // Formula application logic: minimal version, Excel handles spill/display natively
             applyToSelectionBtn.onclick = async () => {
               await Excel.run(async (context) => {
                 const sheet = context.workbook.worksheets.getActiveWorksheet();
@@ -173,22 +173,8 @@ Instructions:
                 const startCol = selectedRange.columnIndex;
                 const targetCell = sheet.getCell(startRow, startCol);
 
-                console.log("Detected range formula:", isRangeFormula);
-
-                if (isRangeFormula) {
-                  // Clear surrounding range to allow spill
-                  const spillRange = sheet.getRangeByIndexes(startRow, startCol, 1000, totalCols); // Clear sufficient rows/cols
-                  spillRange.clear(Excel.ClearApplyTo.all);
-                  targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
-                  targetCell.format.autofitColumns();
-                  await context.sync();
-                  console.log("Inserted full spill formula:", formula);
-                } else {
-                  targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
-                  targetCell.format.autofitColumns();
-                  await context.sync();
-                  console.log("Inserted single-cell formula:", formula);
-                }
+                targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+                await context.sync();
               });
             };
 
