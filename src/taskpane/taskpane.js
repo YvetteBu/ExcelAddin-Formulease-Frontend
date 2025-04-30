@@ -71,8 +71,9 @@ if (typeof window !== "undefined") {
             await context.sync();
             activeColIndex = activeCell.columnIndex;
             targetHeader = headers[activeColIndex];
-            console.log("TargetHeader:", targetHeader);
+            console.log("Final targetHeader, activeColIndex:", targetHeader, activeColIndex);
             const excelColIndex = activeCell.columnIndex + 1;
+            console.log("Computed excelColIndex:", excelColIndex);
           });
         } catch (err) {
           console.log("Excel run failed: ", err);
@@ -86,6 +87,10 @@ if (typeof window !== "undefined") {
           targetHeader = "";
         }
 
+        // Diagnostic logs before building userPrompt
+        console.log("Preparing to build userPrompt with previewValues:", previewValues);
+        console.log("Headers array content:", headers);
+        console.log("usedRange address:", usedRange.address);
         const userPrompt = `
 You are an expert Excel formula assistant.
 
