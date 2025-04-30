@@ -127,27 +127,32 @@ Instructions:
         console.log("Constructed userPrompt:", userPrompt);
 
         let response;
+        // Diagnostic: check prompt before fetch
+        if (!userPrompt || userPrompt.length < 10) {
+          console.error("Prompt is too short or undefined:", userPrompt);
+          recommendationElement.innerHTML = "Prompt construction failed.";
+          return;
+        }
         try {
-          console.log("Sending prompt:", userPrompt);
-          console.log("Before fetch:", API_URL);
+          const payload = JSON.stringify({ prompt: userPrompt });
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
-            mode: "cors",  // explicitly allow CORS
-            body: JSON.stringify({ prompt: userPrompt })
+            body: payload
           });
-          console.log("After fetch, response status:", response.status);
-
-          console.log("Response status:", response.status);
+          console.log("Fetch complete. Status:", response.status);
           if (!response.ok) {
             recommendationElement.innerHTML = `Server error: ${response.status}`;
             return;
           }
-
           const res = await response.text();
           console.log("Received response:", res);
+          if (res.includes("Method Not Allowed")) {
+            recommendationElement.innerHTML = "Backend rejected the request method. Please contact developer.";
+            return;
+          }
           if (!res.trim()) {
             recommendationElement.innerHTML = "Empty response from backend. Please try again.";
             return;
@@ -228,9 +233,9 @@ Instructions:
           recommendationElement.appendChild(explanationBlock);
           // --- End UI logic for apply buttons and explanation from plain res ---
           
-        } catch (err) {
-          console.log("Fetch failed: ", err);
-          recommendationElement.innerHTML = `Request failed. Check console logs. Error: ${err.message || err}`;
+        } catch (fetchErr) {
+          console.error("Fetch threw error:", fetchErr);
+          recommendationElement.innerHTML = `Backend error. ${fetchErr.message || fetchErr}`;
           return;
         }
 
