@@ -157,60 +157,48 @@ if (typeof window !== "undefined") {
             return;
           }
           const { formula, targetCell, explanation } = await response.json();
-          if (!formula) {
-            recommendationElement.innerHTML = "Formula generation failed. Try clarifying your intent or using a more specific instruction.";
-            return;
-          }
-          // Additional validation for targetCell and explanation
-          if (!targetCell || !explanation) {
-            recommendationElement.innerHTML = "Formula incomplete. Please try a different instruction.";
-            return;
-          }
-          console.log("Parsed response:", { formula, targetCell, explanation });
-
           // --- Begin UI logic for apply buttons and explanation from parsed JSON ---
-          if (formula) {
-            const formulaBlock = document.createElement("div");
-            formulaBlock.innerText = `Formula: ${formula}`;
-            recommendationElement.appendChild(formulaBlock);
+          recommendationElement.innerHTML = "";
 
-            const cellBlock = document.createElement("div");
-            cellBlock.innerText = `Recommended cell: ${targetCell || "A1"}`;
-            recommendationElement.appendChild(cellBlock);
+          const formulaBlock = document.createElement("div");
+          formulaBlock.innerText = `Formula: ${formula || "**"}`;
+          recommendationElement.appendChild(formulaBlock);
 
-            const buttonContainer = document.createElement("div");
-            buttonContainer.style.marginTop = "10px";
+          const cellBlock = document.createElement("div");
+          cellBlock.innerText = `Recommended cell: ${targetCell || "**"}`;
+          recommendationElement.appendChild(cellBlock);
 
-            const applyToSelectionBtn = document.createElement("button");
-            applyToSelectionBtn.innerText = "Apply to Selected Cell";
-            applyToSelectionBtn.style.marginRight = "10px";
+          const buttonContainer = document.createElement("div");
+          buttonContainer.style.marginTop = "10px";
 
-            // Formula application logic: updated to write to the currently selected cell
-            applyToSelectionBtn.onclick = async () => {
-              await Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getActiveWorksheet();
-                const selectedRange = context.workbook.getSelectedRange();
-                selectedRange.load(["rowIndex", "columnIndex"]);
-                await context.sync();
+          const applyToSelectionBtn = document.createElement("button");
+          applyToSelectionBtn.innerText = "Apply to Selected Cell";
+          applyToSelectionBtn.style.marginRight = "10px";
 
-                const startRow = selectedRange.rowIndex;
-                const startCol = selectedRange.columnIndex;
+          applyToSelectionBtn.onclick = async () => {
+            await Excel.run(async (context) => {
+              const sheet = context.workbook.worksheets.getActiveWorksheet();
+              const selectedRange = context.workbook.getSelectedRange();
+              selectedRange.load(["rowIndex", "columnIndex"]);
+              await context.sync();
 
-                const targetCellObj = sheet.getCell(startRow, startCol);
-                targetCellObj.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
-                await context.sync();
-              });
-            };
+              const startRow = selectedRange.rowIndex;
+              const startCol = selectedRange.columnIndex;
 
-            buttonContainer.appendChild(applyToSelectionBtn);
-            recommendationElement.appendChild(buttonContainer);
-          }
+              const targetCellObj = sheet.getCell(startRow, startCol);
+              targetCellObj.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+              await context.sync();
+            });
+          };
+
+          buttonContainer.appendChild(applyToSelectionBtn);
+          recommendationElement.appendChild(buttonContainer);
 
           const explanationBlock = document.createElement("div");
           explanationBlock.innerText = `Explanation: ${explanation || "No explanation."}`;
           explanationBlock.style.marginTop = "10px";
           recommendationElement.appendChild(explanationBlock);
-          // --- End UI logic for apply buttons and explanation from parsed JSON ---
+          // --- End UI logic ---
 
         } catch (fetchErr) {
           if (fetchErr.name === 'AbortError') {
