@@ -156,52 +156,21 @@ if (typeof window !== "undefined") {
             recommendationElement.innerHTML = `Server error: ${response.status}`;
             return;
           }
-          const res = await response.text();
-          console.log("Response body text:", res);
-          recommendationElement.innerHTML = "Parsing backend response...";
-          if (res.includes("Method Not Allowed")) {
-            recommendationElement.innerHTML = "Backend rejected the request method. Please contact developer.";
-            return;
-          }
-          if (!res.trim()) {
-            console.log("Empty or invalid response received from backend");
-            recommendationElement.innerHTML = "Empty response from backend. Please try again.";
-            return;
-          }
-          // recommendationElement.innerHTML = res;
-
-          // --- Begin UI logic for apply buttons and explanation from plain res ---
-          const reply = res.trim();
-
-          const formulaMatch = reply.match(/Formula:\s*=(.+?)(?:\r?\n|$)/s);
-          const targetCellMatch = reply.match(/TargetCell:\s*([A-Z]+\d+)/);
-          const explanationMatch = reply.match(/Explanation:\s*([\s\S]*?)(?:\r?\n[A-Z][a-z]+:|$)/);
-
-          // Patch logical AND syntax fix for FILTER usage
-          if (formulaMatch && formulaMatch[1] && formulaMatch[1].includes("FILTER(")) {
-            let rawFormula = formulaMatch[1];
-            rawFormula = rawFormula.replace(/FILTER\(([^,]+),\s*\(([^)]+)\)\s*\*\s*\(([^)]+)\)\)/,
-              (match, range, cond1, cond2) => `FILTER(${range}, (${cond1})*(${cond2}))`);
-            formulaMatch[1] = rawFormula;
-          }
-
-          const formula = formulaMatch ? formulaMatch[1] : null;
-          const isRangeFormula = formula && /^(SORTBY|FILTER)\(/i.test(formula.trim());
-          const targetCell = targetCellMatch ? targetCellMatch[1] : "A1";
-          const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation.";
-
+          const { formula, targetCell, explanation } = await response.json();
           if (!formula) {
             recommendationElement.innerHTML = "Failed to extract formula. Please try rephrasing your request.";
             return;
           }
+          console.log("Parsed response:", { formula, targetCell, explanation });
 
+          // --- Begin UI logic for apply buttons and explanation from parsed JSON ---
           if (formula) {
             const formulaBlock = document.createElement("div");
             formulaBlock.innerText = `Formula: ${formula}`;
             recommendationElement.appendChild(formulaBlock);
 
             const cellBlock = document.createElement("div");
-            cellBlock.innerText = `Recommended cell: ${targetCell}`;
+            cellBlock.innerText = `Recommended cell: ${targetCell || "A1"}`;
             recommendationElement.appendChild(cellBlock);
 
             const buttonContainer = document.createElement("div");
@@ -225,12 +194,12 @@ if (typeof window !== "undefined") {
                 const usedRange = sheet.getUsedRange();
                 usedRange.load("rowCount, columnCount");
                 await context.sync();
-                const targetCell = sheet.getCell(0, usedRange.columnCount + 2);
+                const targetCellObj = sheet.getCell(0, usedRange.columnCount + 2);
                 const spillClearRange = sheet.getRangeByIndexes(0, usedRange.columnCount + 2, usedRange.rowCount + 10, usedRange.columnCount);
                 spillClearRange.clear(); // Ensure all spill cells are truly empty
                 await context.sync();
 
-                targetCell.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+                targetCellObj.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
                 await context.sync();
               });
             };
@@ -240,10 +209,10 @@ if (typeof window !== "undefined") {
           }
 
           const explanationBlock = document.createElement("div");
-          explanationBlock.innerText = `Explanation: ${explanation}`;
+          explanationBlock.innerText = `Explanation: ${explanation || "No explanation."}`;
           explanationBlock.style.marginTop = "10px";
           recommendationElement.appendChild(explanationBlock);
-          // --- End UI logic for apply buttons and explanation from plain res ---
+          // --- End UI logic for apply buttons and explanation from parsed JSON ---
 
         } catch (fetchErr) {
           if (fetchErr.name === 'AbortError') {
