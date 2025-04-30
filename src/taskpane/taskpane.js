@@ -72,6 +72,9 @@ if (typeof window !== "undefined") {
               activeCell.load("address");
               await context.sync();
               activeColIndex = activeCell.columnIndex;
+              if (activeColIndex >= headers.length) {
+                activeColIndex = 0;
+              }
               targetHeader = headers[activeColIndex];
               console.log("Final targetHeader, activeColIndex:", targetHeader, activeColIndex);
               excelColIndex = activeCell.columnIndex + 1;
