@@ -135,6 +135,8 @@ Instructions:
         console.log("Final userPrompt length:", userPrompt.length);
         console.log("Final userPrompt content:", userPrompt);
         console.log("Constructed userPrompt:", userPrompt);
+        recommendationElement.innerHTML = "Sending request to backend...";
+        console.log("Preparing payload to backend:", JSON.stringify({ prompt: userPrompt }).substring(0, 500));
 
         let response;
         // Diagnostic: check prompt before fetch
@@ -153,7 +155,7 @@ Instructions:
             return;
           }
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
@@ -169,12 +171,14 @@ Instructions:
             return;
           }
           const res = await response.text();
-          console.log("Received response:", res);
+          console.log("Response body text:", res);
+          recommendationElement.innerHTML = "Parsing backend response...";
           if (res.includes("Method Not Allowed")) {
             recommendationElement.innerHTML = "Backend rejected the request method. Please contact developer.";
             return;
           }
           if (!res.trim()) {
+            console.log("Empty or invalid response received from backend");
             recommendationElement.innerHTML = "Empty response from backend. Please try again.";
             return;
           }
@@ -260,8 +264,13 @@ Instructions:
           // --- End UI logic for apply buttons and explanation from plain res ---
           
         } catch (fetchErr) {
-          console.error("Fetch threw error:", fetchErr);
-          recommendationElement.innerHTML = `Backend error. ${fetchErr.message || fetchErr}`;
+          if (fetchErr.name === 'AbortError') {
+            console.error("Fetch aborted due to timeout");
+            recommendationElement.innerHTML = "Request timed out. Please try again.";
+          } else {
+            console.error("Fetch threw error:", fetchErr);
+            recommendationElement.innerHTML = `Backend error. ${fetchErr.message || fetchErr}`;
+          }
           return;
         }
 
