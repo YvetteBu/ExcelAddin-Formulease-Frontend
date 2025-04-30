@@ -1,6 +1,7 @@
 import "../taskpane/taskpane.css";
 'use strict';
-const isDev = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('excel.officeapps.live.com');
+const hostname = window.location.hostname;
+const isDev = hostname.includes("localhost") || hostname.includes("127.0.0.1");
 const API_URL = isDev 
   ? "http://localhost:3001/api/gpt" 
   : "https://excel-addin-formulease-backend.vercel.app/api/gpt";
@@ -144,6 +145,8 @@ if (typeof window !== "undefined") {
           const timeoutId = setTimeout(() => controller.abort(), 20000);
           response = await fetch(API_URL, {
             method: "POST",
+            mode: "cors",
+            credentials: "omit",
             headers: {
               "Content-Type": "application/json"
             },
@@ -153,6 +156,8 @@ if (typeof window !== "undefined") {
           clearTimeout(timeoutId);
           console.log("Fetch complete. Status:", response.status);
           if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server responded with:", errorText);
             recommendationElement.innerHTML = `Server error: ${response.status}`;
             return;
           }
