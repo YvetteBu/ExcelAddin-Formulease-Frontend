@@ -160,6 +160,15 @@ if (typeof window !== "undefined") {
           // --- Begin UI logic for apply buttons and explanation from parsed JSON ---
           recommendationElement.innerHTML = "";
 
+          // Insert error block if formula is invalid, and return early
+          if (!formula || formula === "**") {
+            const errorBlock = document.createElement("div");
+            errorBlock.innerText = "Failed to generate a valid formula. Please rephrase your request.";
+            errorBlock.style.color = "red";
+            recommendationElement.appendChild(errorBlock);
+            return;
+          }
+
           const formulaBlock = document.createElement("div");
           formulaBlock.innerText = `Formula: ${formula || "**"}`;
           recommendationElement.appendChild(formulaBlock);
@@ -176,6 +185,12 @@ if (typeof window !== "undefined") {
           applyToSelectionBtn.style.marginRight = "10px";
 
           applyToSelectionBtn.onclick = async () => {
+            // Protect: do not insert if formula is invalid
+            if (!formula || formula === "**") {
+              console.error("Invalid formula. Skipping insert.");
+              recommendationElement.innerHTML += "<div style='color:red; margin-top:8px;'>No valid formula was generated. Please revise your input.</div>";
+              return;
+            }
             await Excel.run(async (context) => {
               const sheet = context.workbook.worksheets.getActiveWorksheet();
               const selectedRange = context.workbook.getSelectedRange();
