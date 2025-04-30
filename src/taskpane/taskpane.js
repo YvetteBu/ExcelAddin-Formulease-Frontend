@@ -59,7 +59,7 @@ if (typeof window !== "undefined") {
             console.log("After sync - got usedRange");
             totalRows = usedRange.rowCount;
             totalCols = usedRange.columnCount;
-            previewValues = usedRange.values.slice(1, 11); // preview first 10 rows
+            previewValues = usedRange.values.slice(1, 6); // first 5 rows, all columns
             console.log("PreviewValues:", previewValues);
             const headersLocal = usedRange.values[0];
             headers = headersLocal;
@@ -103,6 +103,12 @@ if (typeof window !== "undefined") {
         console.log("Preparing to build userPrompt with previewValues:", previewValues);
         console.log("Headers array content:", headers);
         console.log("usedRange address:", usedRange.address);
+
+        if (!previewValues || previewValues.length === 0) {
+          recommendationElement.innerHTML = "Preview data unavailable. Please enter a more specific request.";
+          return;
+        }
+
         const userPrompt = `
 You are an expert Excel formula assistant.
 
@@ -134,14 +140,25 @@ Instructions:
           return;
         }
         try {
-          const payload = JSON.stringify({ prompt: userPrompt });
+          let payload;
+          try {
+            payload = JSON.stringify({ prompt: userPrompt });
+          } catch (err) {
+            console.error("Prompt stringify failed:", err);
+            recommendationElement.innerHTML = "Prompt encoding failed.";
+            return;
+          }
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
-            body: payload
+            body: payload,
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
           console.log("Fetch complete. Status:", response.status);
           if (!response.ok) {
             recommendationElement.innerHTML = `Server error: ${response.status}`;
@@ -178,6 +195,11 @@ Instructions:
           const isRangeFormula = formula && /^(SORTBY|FILTER)\(/i.test(formula.trim());
           const targetCell = targetCellMatch ? targetCellMatch[1] : "A1";
           const explanation = explanationMatch ? explanationMatch[1].trim() : "No explanation.";
+
+          if (!formula) {
+            recommendationElement.innerHTML = "Failed to extract formula. Please try rephrasing your request.";
+            return;
+          }
 
           if (formula) {
             const formulaBlock = document.createElement("div");
