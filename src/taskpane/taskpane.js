@@ -64,16 +64,24 @@ if (typeof window !== "undefined") {
             headers = headersLocal;
             console.log("Headers:", headers);
 
-            // Determine the active cell's column index and address for context
-            const activeCell = context.workbook.getActiveCell();
-            activeCell.load("columnIndex");
-            activeCell.load("address");
-            await context.sync();
-            activeColIndex = activeCell.columnIndex;
-            targetHeader = headers[activeColIndex];
-            console.log("Final targetHeader, activeColIndex:", targetHeader, activeColIndex);
-            const excelColIndex = activeCell.columnIndex + 1;
-            console.log("Computed excelColIndex:", excelColIndex);
+            // Determine the active cell's column index and address for context with enhanced logging and error handling
+            let excelColIndex = 0;
+            try {
+              const activeCell = context.workbook.getActiveCell();
+              activeCell.load("columnIndex");
+              activeCell.load("address");
+              await context.sync();
+              activeColIndex = activeCell.columnIndex;
+              targetHeader = headers[activeColIndex];
+              console.log("Final targetHeader, activeColIndex:", targetHeader, activeColIndex);
+              excelColIndex = activeCell.columnIndex + 1;
+              console.log("Computed excelColIndex:", excelColIndex);
+            } catch (err) {
+              console.log("Failed to get activeCell or sync:", err);
+              activeColIndex = 0;
+              targetHeader = headers[0] || "Unknown";
+              excelColIndex = 1;
+            }
           });
         } catch (err) {
           console.log("Excel run failed: ", err);
@@ -116,6 +124,7 @@ Instructions:
 
         let response;
         try {
+          console.log("Sending prompt:", userPrompt);
           console.log("Before fetch:", API_URL);
           response = await fetch(API_URL, {
             method: "POST",
@@ -135,6 +144,10 @@ Instructions:
 
           const res = await response.text();
           console.log("Received response:", res);
+          if (!res.trim()) {
+            recommendationElement.innerHTML = "Empty response from backend. Please try again.";
+            return;
+          }
           // recommendationElement.innerHTML = res;
 
           // --- Begin UI logic for apply buttons and explanation from plain res ---
@@ -213,7 +226,7 @@ Instructions:
           
         } catch (err) {
           console.log("Fetch failed: ", err);
-          recommendationElement.innerHTML = `Request error: ${err.message || err}`;
+          recommendationElement.innerHTML = `Request failed. Check console logs. Error: ${err.message || err}`;
           return;
         }
 
