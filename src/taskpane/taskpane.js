@@ -156,7 +156,16 @@ if (typeof window !== "undefined") {
             recommendationElement.innerHTML = `Server error: ${response.status}`;
             return;
           }
-          const { formula, targetCell, explanation } = await response.json();
+          let formula, explanation;
+          try {
+            const parsed = await response.json();
+            formula = parsed.formula;
+            explanation = parsed.explanation;
+          } catch (err) {
+            console.error("Failed to parse backend JSON:", err);
+            recommendationElement.innerHTML = "Backend returned invalid response.";
+            return;
+          }
           // --- Begin UI logic for apply buttons and explanation from parsed JSON ---
           recommendationElement.innerHTML = "";
 
