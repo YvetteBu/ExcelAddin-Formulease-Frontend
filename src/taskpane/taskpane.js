@@ -1,6 +1,7 @@
 import "../taskpane/taskpane.css";
 'use strict';
-const API_URL = window.location.hostname.includes('localhost') 
+const isDev = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('excel.officeapps.live.com');
+const API_URL = isDev 
   ? "http://localhost:3001/api/gpt" 
   : "https://excel-addin-formulease-backend.vercel.app/api/gpt";
 import firebaseAuth from "../firebase.js";
