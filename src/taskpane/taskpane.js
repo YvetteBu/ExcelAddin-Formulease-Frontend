@@ -111,8 +111,6 @@ if (typeof window !== "undefined") {
           return;
         }
 
-        console.log("Final userPrompt length:", userPrompt.length);
-        console.log("Final userPrompt content:", userPrompt);
         const userPrompt = `
 You are an expert Excel formula assistant.
 
@@ -134,6 +132,8 @@ Instructions:
 - DO NOT reference headers in formulas.
 - Ensure compatibility with common Excel versions.
 `;
+        console.log("Final userPrompt length:", userPrompt.length);
+        console.log("Final userPrompt content:", userPrompt);
         console.log("Constructed userPrompt:", userPrompt);
 
         let response;
