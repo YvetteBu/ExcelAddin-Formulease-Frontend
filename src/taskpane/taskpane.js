@@ -36,6 +36,7 @@ if (typeof window !== "undefined") {
       document.getElementById("signup-form").onsubmit = handleSignupFormSubmit;
 
       document.getElementById("nl-generate").onclick = async () => {
+        console.log("Triggered generate button");
         // Get the user's intent from the input field and trim whitespace
         const userIntent = document.getElementById("nl-input").value.trim();
         const recommendationElement = document.getElementById("recommendation");
@@ -48,10 +49,12 @@ if (typeof window !== "undefined") {
         let usedRange, totalRows, totalCols, previewValues, headers, activeColIndex, targetHeader;
         try {
           await Excel.run(async (context) => {
+            console.log("Inside Excel.run");
             const sheet = context.workbook.worksheets.getActiveWorksheet();
             usedRange = sheet.getUsedRange();
             usedRange.load("values, address, rowCount, columnCount");
             await context.sync();
+            console.log("After sync - got usedRange");
             totalRows = usedRange.rowCount;
             totalCols = usedRange.columnCount;
             previewValues = usedRange.values.slice(1, 11); // preview first 10 rows
@@ -100,11 +103,11 @@ Instructions:
 - DO NOT reference headers in formulas.
 - Ensure compatibility with common Excel versions.
 `;
+        console.log("Constructed userPrompt:", userPrompt);
 
         let response;
         try {
-          console.log("Requesting backend from:", API_URL);
-          if (!API_URL.includes("localhost")) console.warn("Using production backend, ensure taskpane.js and taskpane.css are correctly deployed.");
+          console.log("Before fetch:", API_URL);
           response = await fetch(API_URL, {
             method: "POST",
             headers: {
@@ -113,6 +116,7 @@ Instructions:
             mode: "cors",  // explicitly allow CORS
             body: JSON.stringify({ prompt: userPrompt })
           });
+          console.log("After fetch, response status:", response.status);
 
           console.log("Response status:", response.status);
           if (!response.ok) {
