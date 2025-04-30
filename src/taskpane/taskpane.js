@@ -158,7 +158,12 @@ if (typeof window !== "undefined") {
           }
           const { formula, targetCell, explanation } = await response.json();
           if (!formula) {
-            recommendationElement.innerHTML = "Failed to extract formula. Please try rephrasing your request.";
+            recommendationElement.innerHTML = "Formula generation failed. Try clarifying your intent or using a more specific instruction.";
+            return;
+          }
+          // Additional validation for targetCell and explanation
+          if (!targetCell || !explanation) {
+            recommendationElement.innerHTML = "Formula incomplete. Please try a different instruction.";
             return;
           }
           console.log("Parsed response:", { formula, targetCell, explanation });
