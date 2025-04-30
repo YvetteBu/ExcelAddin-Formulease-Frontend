@@ -183,8 +183,31 @@ if (typeof window !== "undefined") {
             return;
           }
 
+          // Patch for "sort by" prompts: convert any =SORT to =SORTBY with correct range
+          let displayFormula = formula;
+          if (
+            payloadData.instruction &&
+            /sort by/i.test(payloadData.instruction) &&
+            /^=SORT\(/i.test(formula)
+          ) {
+            // Try to extract sorting column index and direction from the formula
+            // e.g. =SORT(A2:C100, 2, -1)
+            const sortMatch = formula.match(/^=SORT\(\s*([A-Z]+\d*:[A-Z]+\d*)\s*,\s*(\d+)\s*,\s*(-?1)\s*\)/i);
+            if (sortMatch) {
+              // Use headers and totalRows from payloadData
+              const headers = payloadData.headers || [];
+              const totalRows = payloadData.totalRows || 0;
+              const colIndex = parseInt(sortMatch[2], 10) - 1;
+              const direction = parseInt(sortMatch[3], 10);
+              const colLetter = String.fromCharCode(65 + colIndex);
+              const fullRange = `A2:${String.fromCharCode(65 + headers.length - 1)}${totalRows}`;
+              const sortRange = `${colLetter}2:${colLetter}${totalRows}`;
+              displayFormula = `=SORTBY(${fullRange}, ${sortRange}, ${direction})`;
+            }
+          }
+
           const formulaBlock = document.createElement("div");
-          formulaBlock.innerText = `Formula: ${formula || "**"}`;
+          formulaBlock.innerText = `Formula: ${displayFormula || "**"}`;
           recommendationElement.appendChild(formulaBlock);
 
           const cellBlock = document.createElement("div");
@@ -202,7 +225,7 @@ if (typeof window !== "undefined") {
           applyToSelectionBtn.onclick = async () => {
             const safeTargetCell = typeof targetCell === "string" ? targetCell : "L1";
             // Protect: do not insert if formula is invalid
-            if (!formula || formula === "**") {
+            if (!displayFormula || displayFormula === "**") {
               console.error("Invalid formula. Skipping insert.");
               recommendationElement.innerHTML += "<div style='color:red; margin-top:8px;'>No valid formula was generated. Please revise your input.</div>";
               return;
@@ -217,7 +240,7 @@ if (typeof window !== "undefined") {
               const startCol = selectedRange.columnIndex;
 
               const targetCellObj = sheet.getCell(startRow, startCol);
-              targetCellObj.formulas = [[formula.startsWith("=") ? formula : "=" + formula]];
+              targetCellObj.formulas = [[displayFormula.startsWith("=") ? displayFormula : "=" + displayFormula]];
               await context.sync();
             });
           };
