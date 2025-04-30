@@ -59,7 +59,14 @@ if (typeof window !== "undefined") {
             console.log("After sync - got usedRange");
             totalRows = usedRange.rowCount;
             totalCols = usedRange.columnCount;
-            previewValues = usedRange.values.slice(1, 6); // first 5 rows, all columns
+            const previewRows = usedRange.values.slice(1, 6); // first 5 rows
+            previewValues = previewRows.map(row => {
+              const safeIndex = Math.min(activeColIndex, row.length - 1);
+              const left = row.slice(0, 2);
+              const mid = row.slice(safeIndex, safeIndex + 1);
+              const right = row.slice(-2);
+              return [...left, ...mid, ...right];
+            });
             console.log("PreviewValues:", previewValues);
             const headersLocal = usedRange.values[0];
             headers = headersLocal;
@@ -114,7 +121,7 @@ You are an expert Excel formula assistant.
 
 User's request: "${userIntent}" (use this as the main instruction)
 
-- Preview (first 10 rows, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
+- Preview (first 5 rows, key columns only, range ${usedRange.address}, size: ${totalRows}x${totalCols}): ${JSON.stringify(previewValues)}
 - The active column is: ${targetHeader} (column index ${excelColIndex})
 - Use the active column (index ${excelColIndex}) as the default target for calculations unless the user specifies otherwise.
 
